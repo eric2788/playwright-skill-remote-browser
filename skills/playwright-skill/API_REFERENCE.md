@@ -298,6 +298,8 @@ These headers are automatically applied to all requests when using:
 
 ### Taking Screenshots
 
+Ensure the `scripts` directory exists before running these examples (for example, run `mkdir -p scripts`), or update the `path` values to point to an existing directory.
+
 ```javascript
 // Full page screenshot
 await page.screenshot({
