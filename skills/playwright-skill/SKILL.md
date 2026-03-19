@@ -21,26 +21,6 @@ General-purpose browser automation skill. I'll write custom Playwright code for 
 export PLAYWRIGHT_WS_ENDPOINT=ws://localhost:3000
 ```
 
-**CRITICAL WORKFLOW - Follow these steps in order:**
-
-1. **Auto-detect dev servers** - For localhost testing, ALWAYS run server detection FIRST:
-
-   ```bash
-   cd $SKILL_DIR && node -e "require('./lib/helpers').detectDevServers().then(servers => console.log(JSON.stringify(servers)))"
-   ```
-
-   - If **1 server found**: Use it automatically, inform user
-   - If **multiple servers found**: Ask user which one to test
-   - If **no servers found**: Ask for URL or offer to help start dev server
-
-2. **Write scripts to /tmp** - NEVER write test files to skill directory; always use `/tmp/playwright-test-*.js`
-
-3. **Use visible browser by default** - Always use `headless: false` unless user specifically requests headless mode
-   - **NOTE**: When using remote browsers via `chromium.connect()`, display mode (headless/headed) is controlled by the remote server, not the script
-   - Launch-only options like `headless`, `args`, `executablePath` are NOT applicable to remote browser connections
-
-4. **Parameterize URLs** - Always make URLs configurable via environment variable or constant at top of script
-
 ## Important: Remote Browser Option Compatibility
 
 When connecting to a remote browser server, only certain options are supported:
