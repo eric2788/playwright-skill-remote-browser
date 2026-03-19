@@ -36,8 +36,41 @@ export PLAYWRIGHT_WS_ENDPOINT=ws://localhost:3000
 2. **Write scripts to /tmp** - NEVER write test files to skill directory; always use `/tmp/playwright-test-*.js`
 
 3. **Use visible browser by default** - Always use `headless: false` unless user specifically requests headless mode
+   - **NOTE**: When using remote browsers via `chromium.connect()`, display mode (headless/headed) is controlled by the remote server, not the script
+   - Launch-only options like `headless`, `args`, `executablePath` are NOT applicable to remote browser connections
 
 4. **Parameterize URLs** - Always make URLs configurable via environment variable or constant at top of script
+
+## Important: Remote Browser Option Compatibility
+
+When connecting to a remote browser server, only certain options are supported:
+
+**✅ Supported Options** (work with `chromium.connect()`):
+- `timeout` - Connection timeout in milliseconds
+- `slowMo` - Slow down operations by specified milliseconds
+- `headers` - Additional HTTP headers for WebSocket connection
+- `logger` - Custom logger implementation
+
+**❌ Unsupported Options** (launch-only, do NOT work with remote browsers):
+- `headless` - Browser is already running remotely
+- `args` - Cannot pass args to already-running browser
+- `executablePath` - Remote browser uses its own executable
+- `channel`, `downloadsPath`, `chromiumSandbox`, `devtools`, `proxy`
+
+**Example - Correct usage for remote browser:**
+```javascript
+// ✅ CORRECT - Using connect with supported options
+const browser = await chromium.connect(WS_ENDPOINT, {
+  timeout: 60000,  // 60 second connection timeout
+  slowMo: 100      // Slow down by 100ms for visibility
+});
+
+// ❌ INCORRECT - These options will be ignored
+const browser = await chromium.connect(WS_ENDPOINT, {
+  headless: false,  // Ignored - browser already running remotely
+  args: ['--no-sandbox']  // Ignored - cannot modify remote browser
+});
+```
 
 ## How It Works
 

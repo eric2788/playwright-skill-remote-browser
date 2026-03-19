@@ -75,7 +75,29 @@ function cleanupOldTempFiles() {
 }
 
 /**
- * Wrap code in async IIFE if not already wrapped
+ * Wrap code in async IIFE if not already wrapped.
+ *
+ * EXECUTION PATH BEHAVIOR:
+ *
+ * 1. If code has NO require() statements (!hasRequire):
+ *    - Wraps in full template with remote browser validation and proxy
+ *    - Automatically redirects .launch() → .connect() via proxy
+ *    - Best for: Inline code snippets, simple automation tasks
+ *    - User scripts can use .launch() syntax unchanged
+ *
+ * 2. If code HAS require() statements (hasRequire):
+ *    - Assumes code is a complete script managing its own imports
+ *    - Only adds async IIFE wrapper if missing
+ *    - NO proxy wrapping - user must explicitly use .connect()
+ *    - Best for: Complete standalone scripts, complex automation
+ *    - User must write: chromium.connect(process.env.PLAYWRIGHT_WS_ENDPOINT)
+ *
+ * IMPORTANT: This means "existing scripts require no changes" only applies to
+ * inline code without require() statements. File-based scripts that import
+ * playwright must be updated to use .connect() instead of .launch().
+ *
+ * @param {string} code - The code to wrap
+ * @returns {string} Wrapped code ready for execution
  */
 function wrapCodeIfNeeded(code) {
   // Check if code already has require() and async structure
@@ -102,12 +124,58 @@ if (!_WS_ENDPOINT) {
   process.exit(1);
 }
 
-// Wrap browser types so that .launch() transparently connects to the remote browser
+/**
+ * Wrap browser types so that .launch() transparently connects to the remote browser.
+ *
+ * IMPORTANT: This proxy intercepts .launch() calls and redirects them to .connect().
+ * However, launch() and connect() have different option sets:
+ *
+ * Launch-only options (NOT supported for remote browsers):
+ *   - headless, args, executablePath, channel, downloadsPath, chromiumSandbox, devtools, proxy
+ *
+ * Connect-compatible options (supported):
+ *   - timeout, slowMo, headers, logger, wsEndpoint
+ *
+ * This function filters options and warns users about unsupported launch-only options.
+ *
+ * @param {Object} browserType - Playwright browser type (chromium/firefox/webkit)
+ * @returns {Proxy} Proxied browser type with launch→connect redirection
+ */
 function _wrapBrowser(browserType) {
   return new Proxy(browserType, {
     get(target, prop) {
       if (prop === 'launch') {
-        return async (options) => target.connect(_WS_ENDPOINT, options);
+        return async (options = {}) => {
+          // Launch-only options that don't work with remote browser connections
+          const launchOnlyOptions = [
+            'headless', 'args', 'executablePath', 'channel',
+            'downloadsPath', 'chromiumSandbox', 'devtools', 'proxy'
+          ];
+
+          // Check if user provided any launch-only options
+          const providedLaunchOptions = Object.keys(options)
+            .filter(key => launchOnlyOptions.includes(key));
+
+          if (providedLaunchOptions.length > 0) {
+            console.warn(
+              '⚠️  Warning: The following launch-only options are not supported when connecting to a remote browser ' +
+              'and will be ignored: ' + providedLaunchOptions.join(', ')
+            );
+            console.warn('    Remote browsers are already running, so options like headless, args, etc. cannot be applied.');
+          }
+
+          // Filter to only connect-compatible options
+          const connectOptions = {};
+          const validConnectOptions = ['timeout', 'slowMo', 'headers', 'logger'];
+
+          Object.keys(options).forEach(key => {
+            if (validConnectOptions.includes(key)) {
+              connectOptions[key] = options[key];
+            }
+          });
+
+          return target.connect(_WS_ENDPOINT, connectOptions);
+        };
       }
       return typeof target[prop] === 'function' ? target[prop].bind(target) : target[prop];
     }

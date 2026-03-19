@@ -38,9 +38,18 @@ function getExtraHeadersFromEnv() {
 /**
  * Launch browser by connecting to a remote browser server.
  * Requires the PLAYWRIGHT_WS_ENDPOINT environment variable to be set.
+ *
+ * IMPORTANT USAGE NOTES:
+ * - This function connects to an EXISTING remote browser server
+ * - Options should be connect-compatible (timeout, slowMo, headers, logger)
+ * - Launch-only options (headless, args, executablePath) are NOT applicable
+ *   because the browser is already running remotely
+ *
  * @param {string} browserType - 'chromium', 'firefox', or 'webkit'
  * @param {Object} options - Connection options forwarded to browser.connect() (e.g. timeout, slowMo, headers).
  *   Note: local-launch-only options (headless, args, executablePath, etc.) are not applicable here.
+ * @returns {Promise<Browser>} Connected browser instance
+ * @throws {Error} If PLAYWRIGHT_WS_ENDPOINT is not set or connection fails
  */
 async function launchBrowser(browserType = 'chromium', options = {}) {
   const wsEndpoint = process.env.PLAYWRIGHT_WS_ENDPOINT;
