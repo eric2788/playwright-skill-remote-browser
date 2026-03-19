@@ -2,14 +2,14 @@
 
 **General-purpose browser automation as an Agent Skill**
 
-A skill that enables AI agents to write and execute any Playwright automation on-the-fly — from simple page tests to complex multi-step flows. Uses a **remote browser server** so no browser is ever installed locally.
+A skill that enables AI agents to write and execute any Playwright automation on-the-fly — from simple page tests to complex multi-step flows. Uses a **remote browser server** so no local browser process needs to run on your machine.
 
 The agent autonomously decides when to use this skill based on your browser automation needs, loading only the minimal information required for your specific task.
 
 ## Features
 
 - **Any Automation Task** - Agent writes custom code for your specific request, not limited to pre-built scripts
-- **Remote Browser Only** - Connects to a remote Playwright browser server; no local browser installation required
+- **Remote Browser Only** - Connects to a remote Playwright browser server; no locally running browser required (and no browser binaries are downloaded during setup when using `PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1`)
 - **Zero Module Resolution Errors** - Universal executor ensures proper module access
 - **Progressive Disclosure** - Concise SKILL.md with full API reference loaded only when needed
 - **Safe Cleanup** - Smart temp file management without race conditions
@@ -29,7 +29,8 @@ git clone https://github.com/eric2788/playwright-skill-remote-browser.git
 
 # Navigate to the skill directory and install dependencies
 cd playwright-skill-remote-browser/skills/playwright-skill
-npm run setup
+# Prevent Playwright from downloading local browser binaries during setup
+PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 npm run setup
 ```
 
 Set the remote browser endpoint before running any automation:
