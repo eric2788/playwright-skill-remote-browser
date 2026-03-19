@@ -243,7 +243,7 @@ const WS_ENDPOINT = process.env.PLAYWRIGHT_WS_ENDPOINT;
   const browser = await chromium.connect(WS_ENDPOINT);
   const page = await browser.newPage();
 
-  await page.goto('https://example.com/login');
+  await page.goto('https://<your-site>/login');
 
   await page.fill('input[name="email"]', 'user@example.com');
   await page.fill('input[name="password"]', 'mypassword');
