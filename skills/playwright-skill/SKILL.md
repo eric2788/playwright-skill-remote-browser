@@ -186,7 +186,8 @@ const WS_ENDPOINT = process.env.PLAYWRIGHT_WS_ENDPOINT;
   const browser = await chromium.connect(WS_ENDPOINT);
   const page = await browser.newPage();
 
-  await page.goto('https://example.com/contact');
+  // Replace with the URL of the form you want to test and update selectors below to match that page.
+  await page.goto('https://<your-site>/contact');
 
   await page.fill('input[name="name"]', 'John Doe');
   await page.fill('input[name="email"]', 'john@example.com');
