@@ -1,50 +1,21 @@
 #!/usr/bin/env node
 /**
- * Universal Playwright Executor for Claude Code
+ * Universal Playwright Executor
  *
  * Executes Playwright automation code from:
  * - File path: node run.js script.js
  * - Inline code: node run.js 'await page.goto("...")'
  * - Stdin: cat script.js | node run.js
  *
+ * Requires PLAYWRIGHT_WS_ENDPOINT env var pointing to a remote browser server.
  * Ensures proper module resolution by running from skill directory.
  */
 
 const fs = require('fs');
 const path = require('path');
-const { execSync } = require('child_process');
 
 // Change to skill directory for proper module resolution
 process.chdir(__dirname);
-
-/**
- * Check if Playwright is installed
- */
-function checkPlaywrightInstalled() {
-  try {
-    require.resolve('playwright');
-    return true;
-  } catch (e) {
-    return false;
-  }
-}
-
-/**
- * Install Playwright if missing
- */
-function installPlaywright() {
-  console.log('📦 Playwright not found. Installing...');
-  try {
-    execSync('npm install', { stdio: 'inherit', cwd: __dirname });
-    execSync('npx playwright install chromium', { stdio: 'inherit', cwd: __dirname });
-    console.log('✅ Playwright installed successfully');
-    return true;
-  } catch (e) {
-    console.error('❌ Failed to install Playwright:', e.message);
-    console.error('Please run manually: cd', __dirname, '&& npm run setup');
-    return false;
-  }
-}
 
 /**
  * Get code to execute from various sources
@@ -119,8 +90,33 @@ function wrapCodeIfNeeded(code) {
   // If it's just Playwright commands, wrap in full template
   if (!hasRequire) {
     return `
-const { chromium, firefox, webkit, devices } = require('playwright');
+const _playwright = require('playwright');
+const { devices } = _playwright;
 const helpers = require('./lib/helpers');
+
+// Remote browser endpoint (required)
+const _WS_ENDPOINT = process.env.PLAYWRIGHT_WS_ENDPOINT;
+if (!_WS_ENDPOINT) {
+  console.error('❌ PLAYWRIGHT_WS_ENDPOINT environment variable is required.');
+  console.error('   Set it to the WebSocket endpoint of your remote browser server.');
+  process.exit(1);
+}
+
+// Wrap browser types so that .launch() transparently connects to the remote browser
+function _wrapBrowser(browserType) {
+  return new Proxy(browserType, {
+    get(target, prop) {
+      if (prop === 'launch') {
+        return async (options) => target.connect(_WS_ENDPOINT, options);
+      }
+      return typeof target[prop] === 'function' ? target[prop].bind(target) : target[prop];
+    }
+  });
+}
+
+const chromium = _wrapBrowser(_playwright.chromium);
+const firefox = _wrapBrowser(_playwright.firefox);
+const webkit = _wrapBrowser(_playwright.webkit);
 
 // Extra headers from environment variables (if configured)
 const __extraHeaders = helpers.getExtraHeadersFromEnv();
@@ -184,14 +180,6 @@ async function main() {
 
   // Clean up old temp files from previous runs
   cleanupOldTempFiles();
-
-  // Check Playwright installation
-  if (!checkPlaywrightInstalled()) {
-    const installed = installPlaywright();
-    if (!installed) {
-      process.exit(1);
-    }
-  }
 
   // Get code to execute
   const rawCode = getCodeToExecute();

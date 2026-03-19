@@ -29,15 +29,21 @@ This document contains the comprehensive Playwright API reference and advanced p
 
 ### Prerequisites
 
-Before using this skill, ensure Playwright is available:
+Before using this skill, ensure the Playwright package is available and a remote browser server is running:
 
 ```bash
 # Check if Playwright is installed
 npm list playwright 2>/dev/null || echo "Playwright not installed"
 
-# Install (if needed)
-cd ~/.claude/skills/playwright-skill
+# Install (if needed) - does NOT install a local browser
+cd /path/to/skills/playwright-skill
 npm run setup
+```
+
+Set the remote browser WebSocket endpoint:
+
+```bash
+export PLAYWRIGHT_WS_ENDPOINT=ws://your-remote-browser-host:3000
 ```
 
 ### Basic Configuration
@@ -82,11 +88,8 @@ export default defineConfig({
 const { chromium } = require('playwright');
 
 (async () => {
-  // Launch browser
-  const browser = await chromium.launch({
-    headless: false,  // Set to true for headless mode
-    slowMo: 50       // Slow down operations by 50ms
-  });
+  // Connect to remote browser (PLAYWRIGHT_WS_ENDPOINT must be set)
+  const browser = await chromium.connect(process.env.PLAYWRIGHT_WS_ENDPOINT);
 
   const context = await browser.newContext({
     viewport: { width: 1280, height: 720 },

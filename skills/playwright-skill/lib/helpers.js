@@ -36,25 +36,29 @@ function getExtraHeadersFromEnv() {
 }
 
 /**
- * Launch browser with standard configuration
+ * Launch browser by connecting to a remote browser server.
+ * Requires the PLAYWRIGHT_WS_ENDPOINT environment variable to be set.
  * @param {string} browserType - 'chromium', 'firefox', or 'webkit'
- * @param {Object} options - Additional launch options
+ * @param {Object} options - Connection options forwarded to browser.connect() (e.g. timeout, slowMo, headers).
+ *   Note: local-launch-only options (headless, args, executablePath, etc.) are not applicable here.
  */
 async function launchBrowser(browserType = 'chromium', options = {}) {
-  const defaultOptions = {
-    headless: process.env.HEADLESS !== 'false',
-    slowMo: process.env.SLOW_MO ? parseInt(process.env.SLOW_MO) : 0,
-    args: ['--no-sandbox', '--disable-setuid-sandbox']
-  };
-  
+  const wsEndpoint = process.env.PLAYWRIGHT_WS_ENDPOINT;
+  if (!wsEndpoint) {
+    throw new Error(
+      'PLAYWRIGHT_WS_ENDPOINT environment variable is required. ' +
+      'Set it to the WebSocket endpoint of your remote browser server.'
+    );
+  }
+
   const browsers = { chromium, firefox, webkit };
   const browser = browsers[browserType];
-  
+
   if (!browser) {
     throw new Error(`Invalid browser type: ${browserType}`);
   }
-  
-  return await browser.launch({ ...defaultOptions, ...options });
+
+  return await browser.connect(wsEndpoint, options);
 }
 
 /**
