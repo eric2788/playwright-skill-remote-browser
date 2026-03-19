@@ -1,19 +1,18 @@
 {
   "name": "playwright-skill",
   "version": "4.1.0",
-  "description": "General-purpose browser automation with Playwright for Claude Code with auto-detection and smart test management",
+  "description": "General-purpose browser automation with Playwright using a remote browser server",
   "author": "lackeyjb",
   "main": "run.js",
   "scripts": {
-    "setup": "npm install && npx playwright install chromium",
-    "install-all-browsers": "npx playwright install chromium firefox webkit"
+    "setup": "PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 npm install"
   },
   "keywords": [
     "playwright",
     "automation",
     "browser-testing",
     "web-automation",
-    "claude-skill",
+    "remote-browser",
     "general-purpose"
   ],
   "dependencies": {

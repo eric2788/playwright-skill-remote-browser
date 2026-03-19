@@ -1,20 +1,25 @@
 ---
 name: playwright-skill
-description: Complete browser automation with Playwright. Auto-detects dev servers, writes clean test scripts to /tmp. Test pages, fill forms, take screenshots, check responsive design, validate UX, test login flows, check links, automate any browser task. Use when user wants to test websites, automate browser interactions, validate web functionality, or perform any browser-based testing.
+description: Complete browser automation with Playwright via a remote browser server. Auto-detects dev servers, writes clean test scripts to /tmp. Test pages, fill forms, take screenshots, check responsive design, validate UX, test login flows, check links, automate any browser task. Use when user wants to test websites, automate browser interactions, validate web functionality, or perform any browser-based testing.
 ---
 
 **IMPORTANT - Path Resolution:**
-This skill can be installed in different locations (plugin system, manual installation, global, or project-specific). Before executing any commands, determine the skill directory based on where you loaded this SKILL.md file, and use that path in all commands below. Replace `$SKILL_DIR` with the actual discovered path.
+This skill can be installed in different locations. Before executing any commands, determine the skill directory based on where you loaded this SKILL.md file, and use that path in all commands below. Replace `$SKILL_DIR` with the actual discovered path.
 
-Common installation paths:
+Example installation paths (adjust to whatever directory your agent framework uses for skills):
 
-- Plugin system: `~/.claude/plugins/marketplaces/playwright-skill/skills/playwright-skill`
-- Manual global: `~/.claude/skills/playwright-skill`
-- Project-specific: `<project>/.claude/skills/playwright-skill`
+- Manual global: `~/.agent/skills/playwright-skill`
+- Project-specific: `<project>/.agent/skills/playwright-skill`
+- openclaw/picoclaw/nanoclaw: `~/.openclaw/skills/playwright-skill` (or equivalent skills directory for your claw variant)
 
 # Playwright Browser Automation
 
 General-purpose browser automation skill. I'll write custom Playwright code for any automation task you request and execute it via the universal executor.
+
+**REQUIRED: Set `PLAYWRIGHT_WS_ENDPOINT`** to the WebSocket endpoint of your remote browser server before running any automation. Example:
+```bash
+export PLAYWRIGHT_WS_ENDPOINT=ws://localhost:3000
+```
 
 **CRITICAL WORKFLOW - Follow these steps in order:**
 
@@ -31,8 +36,41 @@ General-purpose browser automation skill. I'll write custom Playwright code for 
 2. **Write scripts to /tmp** - NEVER write test files to skill directory; always use `/tmp/playwright-test-*.js`
 
 3. **Use visible browser by default** - Always use `headless: false` unless user specifically requests headless mode
+   - **NOTE**: When using remote browsers via `chromium.connect()`, display mode (headless/headed) is controlled by the remote server, not the script
+   - Launch-only options like `headless`, `args`, `executablePath` are NOT applicable to remote browser connections
 
 4. **Parameterize URLs** - Always make URLs configurable via environment variable or constant at top of script
+
+## Important: Remote Browser Option Compatibility
+
+When connecting to a remote browser server, only certain options are supported:
+
+**✅ Supported Options** (work with `chromium.connect()`):
+- `timeout` - Connection timeout in milliseconds
+- `slowMo` - Slow down operations by specified milliseconds
+- `headers` - Additional HTTP headers for WebSocket connection
+- `logger` - Custom logger implementation
+
+**❌ Unsupported Options** (launch-only, do NOT work with remote browsers):
+- `headless` - Browser is already running remotely
+- `args` - Cannot pass args to already-running browser
+- `executablePath` - Remote browser uses its own executable
+- `channel`, `downloadsPath`, `chromiumSandbox`, `devtools`, `proxy`
+
+**Example - Correct usage for remote browser:**
+```javascript
+// ✅ CORRECT - Using connect with supported options
+const browser = await chromium.connect(WS_ENDPOINT, {
+  timeout: 60000,  // 60 second connection timeout
+  slowMo: 100      // Slow down by 100ms for visibility
+});
+
+// ❌ INCORRECT - These options will be ignored
+const browser = await chromium.connect(WS_ENDPOINT, {
+  headless: false,  // Ignored - browser already running remotely
+  args: ['--no-sandbox']  // Ignored - cannot modify remote browser
+});
+```
 
 ## How It Works
 
@@ -40,7 +78,7 @@ General-purpose browser automation skill. I'll write custom Playwright code for 
 2. I auto-detect running dev servers (or ask for URL if testing external site)
 3. I write custom Playwright code in `/tmp/playwright-test-*.js` (won't clutter your project)
 4. I execute it via: `cd $SKILL_DIR && node run.js /tmp/playwright-test-*.js`
-5. Results displayed in real-time, browser window visible for debugging
+5. Results displayed in real-time via the remote browser
 6. Test files auto-cleaned from /tmp by your OS
 
 ## Setup (First Time)
@@ -50,7 +88,7 @@ cd $SKILL_DIR
 npm run setup
 ```
 
-This installs Playwright and Chromium browser. Only needed once.
+This installs the Playwright package (no local browser is installed). Make sure `PLAYWRIGHT_WS_ENDPOINT` is set to your remote browser server's WebSocket endpoint.
 
 ## Execution Pattern
 
@@ -66,11 +104,14 @@ cd $SKILL_DIR && node -e "require('./lib/helpers').detectDevServers().then(s => 
 // /tmp/playwright-test-page.js
 const { chromium } = require('playwright');
 
+// Remote browser endpoint (required)
+const WS_ENDPOINT = process.env.PLAYWRIGHT_WS_ENDPOINT;
+
 // Parameterized URL (detected or user-provided)
 const TARGET_URL = 'http://localhost:3001'; // <-- Auto-detected or from user
 
 (async () => {
-  const browser = await chromium.launch({ headless: false });
+  const browser = await chromium.connect(WS_ENDPOINT);
   const page = await browser.newPage();
 
   await page.goto(TARGET_URL);
@@ -97,10 +138,11 @@ cd $SKILL_DIR && node run.js /tmp/playwright-test-page.js
 // /tmp/playwright-test-responsive.js
 const { chromium } = require('playwright');
 
+const WS_ENDPOINT = process.env.PLAYWRIGHT_WS_ENDPOINT;
 const TARGET_URL = 'http://localhost:3001'; // Auto-detected
 
 (async () => {
-  const browser = await chromium.launch({ headless: false, slowMo: 100 });
+  const browser = await chromium.connect(WS_ENDPOINT);
   const page = await browser.newPage();
 
   // Desktop test
@@ -123,10 +165,11 @@ const TARGET_URL = 'http://localhost:3001'; // Auto-detected
 // /tmp/playwright-test-login.js
 const { chromium } = require('playwright');
 
+const WS_ENDPOINT = process.env.PLAYWRIGHT_WS_ENDPOINT;
 const TARGET_URL = 'http://localhost:3001'; // Auto-detected
 
 (async () => {
-  const browser = await chromium.launch({ headless: false });
+  const browser = await chromium.connect(WS_ENDPOINT);
   const page = await browser.newPage();
 
   await page.goto(`${TARGET_URL}/login`);
@@ -149,10 +192,11 @@ const TARGET_URL = 'http://localhost:3001'; // Auto-detected
 // /tmp/playwright-test-form.js
 const { chromium } = require('playwright');
 
+const WS_ENDPOINT = process.env.PLAYWRIGHT_WS_ENDPOINT;
 const TARGET_URL = 'http://localhost:3001'; // Auto-detected
 
 (async () => {
-  const browser = await chromium.launch({ headless: false, slowMo: 50 });
+  const browser = await chromium.connect(WS_ENDPOINT);
   const page = await browser.newPage();
 
   await page.goto(`${TARGET_URL}/contact`);
@@ -175,8 +219,10 @@ const TARGET_URL = 'http://localhost:3001'; // Auto-detected
 ```javascript
 const { chromium } = require('playwright');
 
+const WS_ENDPOINT = process.env.PLAYWRIGHT_WS_ENDPOINT;
+
 (async () => {
-  const browser = await chromium.launch({ headless: false });
+  const browser = await chromium.connect(WS_ENDPOINT);
   const page = await browser.newPage();
 
   await page.goto('http://localhost:3000');
@@ -210,8 +256,10 @@ const { chromium } = require('playwright');
 ```javascript
 const { chromium } = require('playwright');
 
+const WS_ENDPOINT = process.env.PLAYWRIGHT_WS_ENDPOINT;
+
 (async () => {
-  const browser = await chromium.launch({ headless: false });
+  const browser = await chromium.connect(WS_ENDPOINT);
   const page = await browser.newPage();
 
   try {
@@ -240,10 +288,11 @@ const { chromium } = require('playwright');
 // /tmp/playwright-test-responsive-full.js
 const { chromium } = require('playwright');
 
+const WS_ENDPOINT = process.env.PLAYWRIGHT_WS_ENDPOINT;
 const TARGET_URL = 'http://localhost:3001'; // Auto-detected
 
 (async () => {
-  const browser = await chromium.launch({ headless: false });
+  const browser = await chromium.connect(WS_ENDPOINT);
   const page = await browser.newPage();
 
   const viewports = [
@@ -283,7 +332,7 @@ For quick one-off tasks, you can execute code inline without creating files:
 ```bash
 # Take a quick screenshot
 cd $SKILL_DIR && node run.js "
-const browser = await chromium.launch({ headless: false });
+const browser = await chromium.connect(process.env.PLAYWRIGHT_WS_ENDPOINT);
 const page = await browser.newPage();
 await page.goto('http://localhost:3001');
 await page.screenshot({ path: '/tmp/quick-screenshot.png', fullPage: true });
@@ -384,12 +433,11 @@ For comprehensive Playwright API documentation, see [API_REFERENCE.md](API_REFER
 ## Tips
 
 - **CRITICAL: Detect servers FIRST** - Always run `detectDevServers()` before writing test code for localhost testing
+- **Remote browser required** - Set `PLAYWRIGHT_WS_ENDPOINT` to your remote browser server's WebSocket endpoint before running any automation
+- **Headless / UI visibility** - When using a remote browser via `chromium.connect()` / `PLAYWRIGHT_WS_ENDPOINT`, headless vs. visible mode is configured on the remote browser server; this skill does not pass a `headless` option and cannot override the server's setting.
 - **Custom headers** - Use `PW_HEADER_NAME`/`PW_HEADER_VALUE` env vars to identify automated traffic to your backend
 - **Use /tmp for test files** - Write to `/tmp/playwright-test-*.js`, never to skill directory or user's project
 - **Parameterize URLs** - Put detected/provided URL in a `TARGET_URL` constant at the top of every script
-- **DEFAULT: Visible browser** - Always use `headless: false` unless user explicitly asks for headless mode
-- **Headless mode** - Only use `headless: true` when user specifically requests "headless" or "background" execution
-- **Slow down:** Use `slowMo: 100` to make actions visible and easier to follow
 - **Wait strategies:** Use `waitForURL`, `waitForSelector`, `waitForLoadState` instead of fixed timeouts
 - **Error handling:** Always use try-catch for robust automation
 - **Console output:** Use `console.log()` to track progress and show what's happening
@@ -402,11 +450,14 @@ For comprehensive Playwright API documentation, see [API_REFERENCE.md](API_REFER
 cd $SKILL_DIR && npm run setup
 ```
 
+**PLAYWRIGHT_WS_ENDPOINT not set:**
+```bash
+export PLAYWRIGHT_WS_ENDPOINT=ws://your-remote-browser:3000
+```
+Alternatively, if your agent framework stores the endpoint in agent memory, retrieve it from there (e.g. look up a memory entry like `PLAYWRIGHT_WS_ENDPOINT` or `remote_browser_endpoint`).
+
 **Module not found:**
 Ensure running from skill directory via `run.js` wrapper
-
-**Browser doesn't open:**
-Check `headless: false` and ensure display available
 
 **Element not found:**
 Add wait: `await page.waitForSelector('.element', { timeout: 10000 })`
