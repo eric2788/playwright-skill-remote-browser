@@ -434,6 +434,7 @@ For comprehensive Playwright API documentation, see [API_REFERENCE.md](API_REFER
 
 - **CRITICAL: Detect servers FIRST** - Always run `detectDevServers()` before writing test code for localhost testing
 - **Remote browser required** - Set `PLAYWRIGHT_WS_ENDPOINT` to your remote browser server's WebSocket endpoint before running any automation
+- **Headless / UI visibility** - When using a remote browser via `chromium.connect()` / `PLAYWRIGHT_WS_ENDPOINT`, headless vs. visible mode is configured on the remote browser server; this skill does not pass a `headless` option and cannot override the server's setting.
 - **Custom headers** - Use `PW_HEADER_NAME`/`PW_HEADER_VALUE` env vars to identify automated traffic to your backend
 - **Use /tmp for test files** - Write to `/tmp/playwright-test-*.js`, never to skill directory or user's project
 - **Parameterize URLs** - Put detected/provided URL in a `TARGET_URL` constant at the top of every script
