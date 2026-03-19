@@ -10,6 +10,7 @@ Example installation paths (adjust to whatever directory your agent framework us
 
 - Manual global: `~/.agent/skills/playwright-skill`
 - Project-specific: `<project>/.agent/skills/playwright-skill`
+- openclaw/picoclaw/nanoclaw: `~/.openclaw/skills/playwright-skill` (or equivalent skills directory for your claw variant)
 
 # Playwright Browser Automation
 
@@ -419,6 +420,7 @@ cd $SKILL_DIR && npm run setup
 ```bash
 export PLAYWRIGHT_WS_ENDPOINT=ws://your-remote-browser:3000
 ```
+Alternatively, if your agent framework stores the endpoint in agent memory, retrieve it from there (e.g. look up a memory entry like `PLAYWRIGHT_WS_ENDPOINT` or `remote_browser_endpoint`).
 
 **Module not found:**
 Ensure running from skill directory via `run.js` wrapper
