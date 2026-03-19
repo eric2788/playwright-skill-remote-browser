@@ -213,7 +213,10 @@ const WS_ENDPOINT = process.env.PLAYWRIGHT_WS_ENDPOINT;
   const browser = await chromium.connect(WS_ENDPOINT);
   const page = await browser.newPage();
 
-  await page.goto('https://example.com/products');
+  // NOTE: The URL and selectors below are placeholders.
+  // Replace 'https://example.com/your-products-page' and the CSS selectors
+  // with a real page and DOM structure that match your target site.
+  await page.goto('https://example.com/your-products-page');
 
   const products = await page.evaluate(() => {
     return Array.from(document.querySelectorAll('.product')).map(el => ({
