@@ -55,10 +55,10 @@ const browser = await chromium.connect(WS_ENDPOINT, {
 ## How It Works
 
 1. You describe what you want to browse or do on the web
-2. I write custom Playwright code in `/tmp/playwright-browse-*.js` (won't clutter your project)
-3. I execute it via: `cd $SKILL_DIR && node run.js /tmp/playwright-browse-*.js`
+2. I write custom Playwright code in `./scripts/playwright-browse-*.js` inside the skill directory
+3. I execute it via: `cd $SKILL_DIR && node run.js ./scripts/playwright-browse-*.js`
 4. Results (text, screenshots, extracted data) are returned in real-time via the remote browser
-5. Script files auto-cleaned from /tmp by your OS
+5. Script files stay in `./scripts/` for easy inspection and re-use
 
 ## Setup (First Time)
 
@@ -71,10 +71,10 @@ This installs the Playwright package (no local browser is installed). Make sure 
 
 ## Execution Pattern
 
-**Step 1: Write browsing script to /tmp**
+**Step 1: Write browsing script to `./scripts/`**
 
 ```javascript
-// /tmp/playwright-browse-page.js
+// ./scripts/playwright-browse-page.js
 const { chromium } = require('playwright');
 
 // Remote browser endpoint (required)
@@ -91,8 +91,8 @@ const WS_ENDPOINT = process.env.PLAYWRIGHT_WS_ENDPOINT;
   const content = await page.textContent('body');
   console.log('Page content:', content.slice(0, 500));
 
-  await page.screenshot({ path: '/tmp/screenshot.png', fullPage: true });
-  console.log('📸 Screenshot saved to /tmp/screenshot.png');
+  await page.screenshot({ path: './scripts/screenshot.png', fullPage: true });
+  console.log('📸 Screenshot saved to ./scripts/screenshot.png');
 
   await browser.close();
 })();
@@ -101,7 +101,7 @@ const WS_ENDPOINT = process.env.PLAYWRIGHT_WS_ENDPOINT;
 **Step 2: Execute from skill directory**
 
 ```bash
-cd $SKILL_DIR && node run.js /tmp/playwright-browse-page.js
+cd $SKILL_DIR && node run.js ./scripts/playwright-browse-page.js
 ```
 
 ## Common Patterns
@@ -109,7 +109,7 @@ cd $SKILL_DIR && node run.js /tmp/playwright-browse-page.js
 ### Navigate to a URL and Read Content
 
 ```javascript
-// /tmp/playwright-browse-read.js
+// ./scripts/playwright-browse-read.js
 const { chromium } = require('playwright');
 
 const WS_ENDPOINT = process.env.PLAYWRIGHT_WS_ENDPOINT;
@@ -132,7 +132,7 @@ const WS_ENDPOINT = process.env.PLAYWRIGHT_WS_ENDPOINT;
 ### Take a Screenshot of a Website
 
 ```javascript
-// /tmp/playwright-browse-screenshot.js
+// ./scripts/playwright-browse-screenshot.js
 const { chromium } = require('playwright');
 
 const WS_ENDPOINT = process.env.PLAYWRIGHT_WS_ENDPOINT;
@@ -142,8 +142,8 @@ const WS_ENDPOINT = process.env.PLAYWRIGHT_WS_ENDPOINT;
   const page = await browser.newPage();
 
   await page.goto('https://example.com', { waitUntil: 'networkidle' });
-  await page.screenshot({ path: '/tmp/screenshot.png', fullPage: true });
-  console.log('📸 Screenshot saved to /tmp/screenshot.png');
+  await page.screenshot({ path: './scripts/screenshot.png', fullPage: true });
+  console.log('📸 Screenshot saved to ./scripts/screenshot.png');
 
   await browser.close();
 })();
@@ -152,7 +152,7 @@ const WS_ENDPOINT = process.env.PLAYWRIGHT_WS_ENDPOINT;
 ### Search the Web
 
 ```javascript
-// /tmp/playwright-browse-search.js
+// ./scripts/playwright-browse-search.js
 const { chromium } = require('playwright');
 
 const WS_ENDPOINT = process.env.PLAYWRIGHT_WS_ENDPOINT;
@@ -177,7 +177,7 @@ const WS_ENDPOINT = process.env.PLAYWRIGHT_WS_ENDPOINT;
 ### Fill and Submit a Web Form
 
 ```javascript
-// /tmp/playwright-browse-form.js
+// ./scripts/playwright-browse-form.js
 const { chromium } = require('playwright');
 
 const WS_ENDPOINT = process.env.PLAYWRIGHT_WS_ENDPOINT;
@@ -203,7 +203,7 @@ const WS_ENDPOINT = process.env.PLAYWRIGHT_WS_ENDPOINT;
 ### Extract Structured Data from a Page
 
 ```javascript
-// /tmp/playwright-browse-extract.js
+// ./scripts/playwright-browse-extract.js
 const { chromium } = require('playwright');
 
 const WS_ENDPOINT = process.env.PLAYWRIGHT_WS_ENDPOINT;
@@ -230,7 +230,7 @@ const WS_ENDPOINT = process.env.PLAYWRIGHT_WS_ENDPOINT;
 ### Log In to a Website
 
 ```javascript
-// /tmp/playwright-browse-login.js
+// ./scripts/playwright-browse-login.js
 const { chromium } = require('playwright');
 
 const WS_ENDPOINT = process.env.PLAYWRIGHT_WS_ENDPOINT;
@@ -262,7 +262,7 @@ cd $SKILL_DIR && node run.js "
 const browser = await chromium.connect(process.env.PLAYWRIGHT_WS_ENDPOINT);
 const page = await browser.newPage();
 await page.goto('https://example.com');
-await page.screenshot({ path: '/tmp/quick-screenshot.png', fullPage: true });
+await page.screenshot({ path: './scripts/quick-screenshot.png', fullPage: true });
 console.log('Screenshot saved');
 await browser.close();
 "
@@ -312,14 +312,14 @@ Configure custom headers for all HTTP requests via environment variables. Useful
 
 ```bash
 PW_HEADER_NAME=X-Automated-By PW_HEADER_VALUE=playwright-skill \
-  cd $SKILL_DIR && node run.js /tmp/my-script.js
+  cd $SKILL_DIR && node run.js ./scripts/my-script.js
 ```
 
 **Multiple headers (JSON format):**
 
 ```bash
 PW_EXTRA_HEADERS='{"X-Automated-By":"playwright-skill","X-Debug":"true"}' \
-  cd $SKILL_DIR && node run.js /tmp/my-script.js
+  cd $SKILL_DIR && node run.js ./scripts/my-script.js
 ```
 
 ### How It Works
@@ -355,7 +355,7 @@ For comprehensive Playwright API documentation, see [API_REFERENCE.md](API_REFER
 ## Tips
 
 - **Remote browser required** - Set `PLAYWRIGHT_WS_ENDPOINT` to your remote browser server's WebSocket endpoint before running any automation
-- **Write scripts to /tmp** - Write to `/tmp/playwright-browse-*.js`, never to the skill directory or user's project
+- **Write scripts to `./scripts/`** - Write to `./scripts/playwright-browse-*.js` inside the skill directory; relative paths work because `run.js` sets the working directory to `$SKILL_DIR`
 - **Headless / UI visibility** - When using a remote browser via `chromium.connect()` / `PLAYWRIGHT_WS_ENDPOINT`, headless vs. visible mode is configured on the remote browser server; this skill does not pass a `headless` option and cannot override the server's setting.
 - **Custom headers** - Use `PW_HEADER_NAME`/`PW_HEADER_VALUE` env vars to add custom HTTP headers to all requests
 - **Wait strategies** - Use `waitForURL`, `waitForSelector`, `waitForLoadState` instead of fixed timeouts
@@ -388,8 +388,8 @@ Add wait: `await page.waitForSelector('.element', { timeout: 10000 })`
 User: "What's the top story on Hacker News right now?"
 
 Agent: I'll open Hacker News and read the top stories.
-[Writes browsing script to /tmp/playwright-browse-hn.js]
-[Runs: cd $SKILL_DIR && node run.js /tmp/playwright-browse-hn.js]
+[Writes browsing script to ./scripts/playwright-browse-hn.js]
+[Runs: cd $SKILL_DIR && node run.js ./scripts/playwright-browse-hn.js]
 [Output: 1. "Some Interesting Article" - 342 points]
 The top story is "Some Interesting Article" with 342 points.
 ```
@@ -398,8 +398,8 @@ The top story is "Some Interesting Article" with 342 points.
 User: "Take a screenshot of github.com"
 
 Agent: I'll navigate to GitHub and take a screenshot.
-[Runs inline: chromium.connect → page.goto('https://github.com') → page.screenshot]
-[Output: 📸 Screenshot saved to /tmp/screenshot.png]
+[Runs inline: chromium.connect → page.goto('https://github.com') → page.screenshot('./scripts/screenshot.png')]
+[Output: 📸 Screenshot saved to ./scripts/screenshot.png]
 [Attaches screenshot]
 ```
 
@@ -407,8 +407,8 @@ Agent: I'll navigate to GitHub and take a screenshot.
 User: "Search for 'Playwright docs' on Google and tell me the first result"
 
 Agent: I'll search Google for you.
-[Writes browsing script to /tmp/playwright-browse-search.js]
-[Runs: cd $SKILL_DIR && node run.js /tmp/playwright-browse-search.js]
+[Writes browsing script to ./scripts/playwright-browse-search.js]
+[Runs: cd $SKILL_DIR && node run.js ./scripts/playwright-browse-search.js]
 [Output: 1. Playwright: Fast and Reliable End-to-End Testing... - playwright.dev]
 The first result is "Playwright: Fast and Reliable End-to-End Testing" at playwright.dev.
 ```
@@ -417,6 +417,6 @@ The first result is "Playwright: Fast and Reliable End-to-End Testing" at playwr
 
 - Each browsing session is custom-written for your specific request
 - Not limited to pre-built scripts - any browser task on any website is possible
-- Browse scripts written to `/tmp` for automatic cleanup (no clutter)
+- Browse scripts and screenshots stored in `./scripts/` relative to the skill directory
 - Code executes reliably with proper module resolution via `run.js`
 - Progressive disclosure - API_REFERENCE.md loaded only when advanced features needed

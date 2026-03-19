@@ -1,19 +1,19 @@
 # Playwright Skill - Remote Browser
 
-**General-purpose browser automation as an Agent Skill**
+**Free internet browsing as an Agent Skill**
 
-A skill that enables AI agents to write and execute any Playwright automation on-the-fly — from simple page tests to complex multi-step flows. Uses a **remote browser server** so no local browser process needs to run on your machine.
+A skill that enables AI agents to browse the internet freely using a remote Playwright browser — navigate to any URL, read page content, extract data, fill forms, take screenshots, and perform any browser-based task. Uses a **remote browser server** so no local browser process needs to run on your machine.
 
-The agent autonomously decides when to use this skill based on your browser automation needs, loading only the minimal information required for your specific task.
+The agent autonomously decides when to use this skill based on your browsing needs, loading only the minimal information required for your specific task.
 
 ## Features
 
-- **Any Automation Task** - Agent writes custom code for your specific request, not limited to pre-built scripts
+- **Browse Any Website** - Agent writes custom Playwright code for your specific request, not limited to pre-built scripts
 - **Remote Browser Only** - Connects to a remote Playwright browser server; no locally running browser required (and no browser binaries are downloaded during setup when using `PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1`)
 - **Zero Module Resolution Errors** - Universal executor ensures proper module access
 - **Progressive Disclosure** - Concise SKILL.md with full API reference loaded only when needed
-- **Safe Cleanup** - Smart temp file management without race conditions
-- **Comprehensive Helpers** - Optional utility functions for common tasks
+- **Safe Script Management** - Scripts and screenshots stored in `./scripts/` for easy inspection and re-use
+- **Comprehensive Helpers** - Optional utility functions for common browsing tasks
 
 ## Requirements
 
@@ -41,47 +41,47 @@ export PLAYWRIGHT_WS_ENDPOINT=ws://your-remote-browser-host:3000
 
 ## Quick Start
 
-After installation, simply ask your agent to test or automate any browser task. The agent will write custom Playwright code, execute it against the remote browser, and return results with screenshots and console output.
+After installation, simply ask your agent to browse or interact with any website. The agent will write custom Playwright code, execute it against the remote browser, and return results with screenshots and extracted content.
 
 ## Usage Examples
 
-### Test Any Page
+### Browse the Web
 
 ```
-"Test the homepage"
-"Check if the contact form works"
-"Verify the signup flow"
+"What's the top story on Hacker News?"
+"Take a screenshot of github.com"
+"Search for 'Playwright docs' on Google"
 ```
 
-### Visual Testing
+### Extract Information
 
 ```
-"Take screenshots of the dashboard in mobile and desktop"
-"Test responsive design across different viewports"
+"What are the latest posts on the Playwright blog?"
+"Get the current Bitcoin price from CoinGecko"
+"List all links on the Wikipedia homepage"
 ```
 
-### Interaction Testing
+### Interact with Websites
 
 ```
-"Fill out the registration form and submit it"
-"Click through the main navigation"
-"Test the search functionality"
+"Fill out the contact form on example.com"
+"Log in to example.com with these credentials"
+"Click the 'Download' button on this page"
 ```
 
-### Validation
+### Screenshots & Visual
 
 ```
-"Check for broken links"
-"Verify all images load"
-"Test form validation"
+"Take a full-page screenshot of stripe.com"
+"Show me what the GitHub trending page looks like on mobile"
 ```
 
 ## How It Works
 
-1. Describe what you want to test or automate
+1. Describe what you want to browse or do on the web
 2. The agent writes custom Playwright code for the task
 3. The universal executor (run.js) runs it with proper module resolution
-4. Automation executes against the remote browser
+4. Browsing executes against the remote browser
 5. Results are displayed with console output and screenshots
 
 ## Configuration
@@ -90,7 +90,7 @@ Default settings:
 
 - **Remote Browser:** Required — set `PLAYWRIGHT_WS_ENDPOINT`
 - **Timeout:** `30s`
-- **Screenshots:** Saved to `/tmp/`
+- **Scripts & Screenshots:** Saved to `./scripts/` inside the skill directory
 
 ## Project Structure
 
@@ -111,7 +111,7 @@ playwright-skill-remote-browser/
 
 ## Advanced Usage
 
-The agent will automatically load `API_REFERENCE.md` when needed for comprehensive documentation on selectors, network interception, authentication, visual regression testing, mobile emulation, performance testing, and debugging.
+The agent will automatically load `API_REFERENCE.md` when needed for comprehensive documentation on selectors, network interception, authentication, data extraction, mobile emulation, and debugging.
 
 ## Dependencies
 
@@ -132,7 +132,7 @@ Verify `PLAYWRIGHT_WS_ENDPOINT` is set and the remote browser server is running.
 
 ## What is a Skill?
 
-[Agent Skills](https://agentskills.io) are folders of instructions, scripts, and resources that agents can discover and use to do things more accurately and efficiently. When you ask an agent to test a webpage or automate browser interactions, it discovers this skill, loads the necessary instructions, executes custom Playwright code against the remote browser, and returns results with screenshots and console output.
+[Agent Skills](https://agentskills.io) are folders of instructions, scripts, and resources that agents can discover and use to do things more accurately and efficiently. When you ask an agent to browse a webpage or interact with a website, it discovers this skill, loads the necessary instructions, executes custom Playwright code against the remote browser, and returns results with screenshots and extracted content.
 
 This Playwright skill implements the [open Agent Skills specification](https://agentskills.io), making it compatible across agent platforms.
 

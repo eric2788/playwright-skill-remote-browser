@@ -1,6 +1,6 @@
 # Playwright Skill - Complete API Reference
 
-This document contains the comprehensive Playwright API reference and advanced patterns. For quick-start execution patterns, see [SKILL.md](SKILL.md).
+This document contains the comprehensive Playwright API reference and advanced patterns for browser control and internet browsing. For quick-start execution patterns, see [SKILL.md](SKILL.md).
 
 ## Table of Contents
 
@@ -9,20 +9,15 @@ This document contains the comprehensive Playwright API reference and advanced p
 - [Selectors & Locators](#selectors--locators)
 - [Common Actions](#common-actions)
 - [Waiting Strategies](#waiting-strategies)
-- [Assertions](#assertions)
-- [Page Object Model](#page-object-model-pom)
-- [Network & API Testing](#network--api-testing)
+- [Network Inspection & Interception](#network-inspection--interception)
 - [Authentication & Session Management](#authentication--session-management)
-- [Visual Testing](#visual-testing)
-- [Mobile Testing](#mobile-testing)
+- [Screenshots & Visual Capture](#screenshots--visual-capture)
+- [Mobile Device Emulation](#mobile-device-emulation)
 - [Debugging](#debugging)
-- [Performance Testing](#performance-testing)
-- [Parallel Execution](#parallel-execution)
-- [Data-Driven Testing](#data-driven-testing)
-- [Accessibility Testing](#accessibility-testing)
-- [CI/CD Integration](#cicd-integration)
-- [Best Practices](#best-practices)
+- [Performance Measurement](#performance-measurement)
+- [Data Extraction Patterns](#data-extraction-patterns)
 - [Common Patterns & Solutions](#common-patterns--solutions)
+- [Best Practices](#best-practices)
 - [Troubleshooting](#troubleshooting)
 
 ## Installation & Setup
@@ -41,44 +36,12 @@ export PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
 npm run setup
 ```
 
+### Basic Configuration
+
 Set the remote browser WebSocket endpoint:
 
 ```bash
 export PLAYWRIGHT_WS_ENDPOINT=ws://your-remote-browser-host:3000
-```
-
-### Basic Configuration
-
-Create `playwright.config.ts`:
-
-```typescript
-import { defineConfig, devices } from '@playwright/test';
-
-export default defineConfig({
-  testDir: './tests',
-  fullyParallel: true,
-  forbidOnly: !!process.env.CI,
-  retries: process.env.CI ? 2 : 0,
-  workers: process.env.CI ? 1 : undefined,
-  reporter: 'html',
-  use: {
-    baseURL: 'http://localhost:3000',
-    trace: 'on-first-retry',
-    screenshot: 'only-on-failure',
-    video: 'retain-on-failure',
-  },
-  projects: [
-    {
-      name: 'chromium',
-      use: { ...devices['Desktop Chrome'] },
-    },
-  ],
-  webServer: {
-    command: 'npm run start',
-    url: 'http://localhost:3000',
-    reuseExistingServer: !process.env.CI,
-  },
-});
 ```
 
 ## Core Patterns
@@ -108,30 +71,6 @@ const { chromium } = require('playwright');
 
   await browser.close();
 })();
-```
-
-### Test Structure
-
-```typescript
-import { test, expect } from '@playwright/test';
-
-test.describe('Feature Name', () => {
-  test.beforeEach(async ({ page }) => {
-    await page.goto('/');
-  });
-
-  test('should do something', async ({ page }) => {
-    // Arrange
-    const button = page.locator('button[data-testid="submit"]');
-
-    // Act
-    await button.click();
-
-    // Assert
-    await expect(page).toHaveURL('/success');
-    await expect(page.locator('.message')).toHaveText('Success!');
-  });
-});
 ```
 
 ## Selectors & Locators
@@ -302,87 +241,7 @@ await page.locator('.slow-element').waitFor({
 });
 ```
 
-## Assertions
-
-### Common Assertions
-
-```javascript
-import { expect } from '@playwright/test';
-
-// Page assertions
-await expect(page).toHaveTitle('My App');
-await expect(page).toHaveURL('https://example.com/dashboard');
-await expect(page).toHaveURL(/.*dashboard/);
-
-// Element visibility
-await expect(page.locator('.message')).toBeVisible();
-await expect(page.locator('.spinner')).toBeHidden();
-await expect(page.locator('button')).toBeEnabled();
-await expect(page.locator('input')).toBeDisabled();
-
-// Text content
-await expect(page.locator('h1')).toHaveText('Welcome');
-await expect(page.locator('.message')).toContainText('success');
-await expect(page.locator('.items')).toHaveText(['Item 1', 'Item 2']);
-
-// Input values
-await expect(page.locator('input')).toHaveValue('test@example.com');
-await expect(page.locator('input')).toBeEmpty();
-
-// Attributes
-await expect(page.locator('button')).toHaveAttribute('type', 'submit');
-await expect(page.locator('img')).toHaveAttribute('src', /.*\.png/);
-
-// CSS properties
-await expect(page.locator('.error')).toHaveCSS('color', 'rgb(255, 0, 0)');
-
-// Count
-await expect(page.locator('.item')).toHaveCount(5);
-
-// Checkbox/Radio state
-await expect(page.locator('input[type="checkbox"]')).toBeChecked();
-```
-
-## Page Object Model (POM)
-
-### Basic Page Object
-
-```javascript
-// pages/LoginPage.js
-class LoginPage {
-  constructor(page) {
-    this.page = page;
-    this.usernameInput = page.locator('input[name="username"]');
-    this.passwordInput = page.locator('input[name="password"]');
-    this.submitButton = page.locator('button[type="submit"]');
-    this.errorMessage = page.locator('.error-message');
-  }
-
-  async navigate() {
-    await this.page.goto('/login');
-  }
-
-  async login(username, password) {
-    await this.usernameInput.fill(username);
-    await this.passwordInput.fill(password);
-    await this.submitButton.click();
-  }
-
-  async getErrorMessage() {
-    return await this.errorMessage.textContent();
-  }
-}
-
-// Usage in test
-test('login with valid credentials', async ({ page }) => {
-  const loginPage = new LoginPage(page);
-  await loginPage.navigate();
-  await loginPage.login('user@example.com', 'password123');
-  await expect(page).toHaveURL('/dashboard');
-});
-```
-
-## Network & API Testing
+## Network Inspection & Interception
 
 ### Intercepting Requests
 
@@ -435,27 +294,27 @@ These headers are automatically applied to all requests when using:
 
 **Use case:** Identify automated traffic so your backend can return LLM-optimized responses (e.g., plain text errors instead of styled HTML).
 
-## Visual Testing
+## Screenshots & Visual Capture
 
-### Screenshots
+### Taking Screenshots
 
 ```javascript
 // Full page screenshot
 await page.screenshot({
-  path: 'screenshot.png',
+  path: './scripts/screenshot.png',
   fullPage: true
 });
 
 // Element screenshot
 await page.locator('.chart').screenshot({
-  path: 'chart.png'
+  path: './scripts/chart.png'
 });
 
-// Visual comparison
-await expect(page).toHaveScreenshot('homepage.png');
+// Viewport-only screenshot
+await page.screenshot({ path: './scripts/viewport.png' });
 ```
 
-## Mobile Testing
+## Mobile Device Emulation
 
 ```javascript
 // Device emulation
@@ -472,31 +331,18 @@ const context = await browser.newContext({
 
 ## Debugging
 
-### Debug Mode
-
-```bash
-# Run with inspector
-npx playwright test --debug
-
-# Headed mode
-npx playwright test --headed
-
-# Slow motion
-npx playwright test --headed --slowmo=1000
-```
-
 ### In-Code Debugging
 
 ```javascript
-// Pause execution
+// Pause execution (opens Playwright Inspector)
 await page.pause();
 
-// Console logs
+// Console logs from the browser
 page.on('console', msg => console.log('Browser log:', msg.text()));
 page.on('pageerror', error => console.log('Page error:', error));
 ```
 
-## Performance Testing
+## Performance Measurement
 
 ```javascript
 // Measure page load time
@@ -506,83 +352,46 @@ const loadTime = Date.now() - startTime;
 console.log(`Page loaded in ${loadTime}ms`);
 ```
 
-## Parallel Execution
+## Data Extraction Patterns
+
+### Extract Text Content
 
 ```javascript
-// Run tests in parallel
-test.describe.parallel('Parallel suite', () => {
-  test('test 1', async ({ page }) => {
-    // Runs in parallel with test 2
-  });
+// Single element text
+const title = await page.textContent('h1');
 
-  test('test 2', async ({ page }) => {
-    // Runs in parallel with test 1
-  });
-});
+// All matching elements
+const items = await page.locator('li').allTextContents();
+
+// Text from multiple selectors
+const heading = await page.locator('h1').innerText();
+const paragraph = await page.locator('p.intro').innerText();
 ```
 
-## Data-Driven Testing
+### Extract Attributes and Links
 
 ```javascript
-// Parameterized tests
-const testData = [
-  { username: 'user1', password: 'pass1', expected: 'Welcome user1' },
-  { username: 'user2', password: 'pass2', expected: 'Welcome user2' },
-];
+// Single attribute
+const href = await page.locator('a.main-link').getAttribute('href');
 
-testData.forEach(({ username, password, expected }) => {
-  test(`login with ${username}`, async ({ page }) => {
-    await page.goto('/login');
-    await page.fill('#username', username);
-    await page.fill('#password', password);
-    await page.click('button[type="submit"]');
-    await expect(page.locator('.message')).toHaveText(expected);
-  });
-});
+// All hrefs on the page
+const links = await page.evaluate(() =>
+  Array.from(document.querySelectorAll('a[href]')).map(a => a.href)
+);
 ```
 
-## Accessibility Testing
+### Extract Structured Data
 
 ```javascript
-import { injectAxe, checkA11y } from 'axe-playwright';
-
-test('accessibility check', async ({ page }) => {
-  await page.goto('/');
-  await injectAxe(page);
-  await checkA11y(page);
+const data = await page.evaluate(() => {
+  return Array.from(document.querySelectorAll('.item')).map(el => ({
+    title: el.querySelector('.title')?.textContent?.trim(),
+    price: el.querySelector('.price')?.textContent?.trim(),
+    url: el.querySelector('a')?.href,
+  }));
 });
+console.log(JSON.stringify(data, null, 2));
 ```
-
-## CI/CD Integration
-
-### GitHub Actions
-
-```yaml
-name: Playwright Tests
-on:
-  push:
-    branches: [main, master]
-jobs:
-  test:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
-      - name: Install dependencies
-        run: npm ci
-      - name: Install Playwright Browsers
-        run: npx playwright install --with-deps
-      - name: Run tests
-        run: npx playwright test
-```
-
-## Best Practices
-
-1. **Test Organization** - Use descriptive test names, group related tests
-2. **Selector Strategy** - Prefer data-testid attributes, use role-based selectors
-3. **Waiting** - Use Playwright's auto-waiting, avoid hard-coded delays
-4. **Error Handling** - Add proper error messages, take screenshots on failure
-5. **Performance** - Run tests in parallel, reuse authentication state
 
 ## Common Patterns & Solutions
 
@@ -622,33 +431,23 @@ async function scrollToBottom(page) {
 }
 ```
 
+## Best Practices
+
+1. **Selector Strategy** - Prefer data-testid attributes and role-based selectors; avoid fragile CSS classes
+2. **Waiting** - Use Playwright's auto-waiting (`waitForSelector`, `waitForLoadState`, `waitForURL`); avoid hard-coded timeouts
+3. **Error Handling** - Always wrap in try-catch and take a screenshot on failure for visibility
+4. **Output** - Use `console.log()` to surface extracted data and page state back to the user
+5. **Cookie Banners** - Use `helpers.handleCookieBanner(page)` before interacting with sites that show consent dialogs
+6. **Scripts** - Save browsing scripts to `./scripts/` so they can be inspected and re-run
+
 ## Troubleshooting
 
 ### Common Issues
 
-1. **Element not found** - Check if element is in iframe, verify visibility
-2. **Timeout errors** - Increase timeout, check network conditions
-3. **Flaky tests** - Use proper waiting strategies, mock external dependencies
-4. **Authentication issues** - Verify auth state is properly saved
-
-## Quick Reference Commands
-
-```bash
-# Run tests
-npx playwright test
-
-# Run in headed mode
-npx playwright test --headed
-
-# Debug tests
-npx playwright test --debug
-
-# Generate code
-npx playwright codegen https://example.com
-
-# Show report
-npx playwright show-report
-```
+1. **Element not found** - Check if element is in an iframe, verify it is visible and the page has loaded
+2. **Timeout errors** - Increase timeout, check network conditions, use `waitForLoadState('networkidle')`
+3. **Authentication issues** - Verify credentials and auth flow; save session state for re-use
+4. **Cookie/consent dialogs** - Use `helpers.handleCookieBanner(page)` before interacting with the page
 
 ## Additional Resources
 
