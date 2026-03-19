@@ -35,8 +35,9 @@ Before using this skill, ensure the Playwright package is available and a remote
 # Check if Playwright is installed
 npm list playwright 2>/dev/null || echo "Playwright not installed"
 
-# Install (if needed) - does NOT install a local browser
+# Install (if needed) without downloading local browser binaries
 cd /path/to/skills/playwright-skill
+export PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
 npm run setup
 ```
 
