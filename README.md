@@ -64,8 +64,8 @@ After installation, simply ask your agent to browse or interact with any website
 ### Interact with Websites
 
 ```
-"Fill out the contact form on example.com"
-"Log in to example.com with these credentials"
+"Fill out the contact form on the site you provide"
+"Log in to the site you provide with these credentials"
 "Click the 'Download' button on this page"
 ```
 
